@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Download, Search, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Download, Search, ChevronLeft, ChevronRight, Calendar, Filter } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { getLedger, getUsers } from '../utils/storageManager';
 import { formatDate, formatCurrency, isDateInRange } from '../utils/helpers';
 
 export default function Ledger() {
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const { user } = useAuthStore();
   const [filters, setFilters] = useState({
     dateFrom: '',
@@ -114,54 +115,68 @@ export default function Ledger() {
   };
 
   return (
-    <div className="p-2 md:p-6 space-y-4 md:space-y-6">
+    <div className="p-2 md:p-6 space-y-2 md:space-y-6">
       {/* Header */}
       {/* Header Filters — single row */}
       {/* Header with Filters */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-3 xl:gap-4 w-full pb-2 border-b border-gray-100">
-        <div className="flex flex-col xl:flex-row w-full gap-2">
+      {/* Header with Filters */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 lg:gap-4 w-full pb-2 border-b border-gray-100">
+        <div className="flex flex-col lg:flex-row w-full gap-2 items-center">
           
           {/* Search + Export Row (Mobile grouping) */}
-          <div className="flex items-end gap-2 w-full xl:w-auto xl:flex-1">
+          <div className="flex items-center gap-2 w-full lg:w-auto lg:flex-[1.5]">
             <div className="flex-1 w-full relative">
-              <Search className="absolute left-2.5 top-2.5 xl:top-2 text-gray-400" size={14} />
+              <Search className="absolute left-2.5 top-[9px] lg:top-[11px] text-gray-400" size={14} />
               <input
                 type="text"
                 placeholder="Search ref ID, person, amount..."
                 value={filters.searchQuery}
                 onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-                className="w-full bg-white border border-gray-300 rounded-lg xl:rounded pl-8 pr-3 py-2 xl:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+                className="w-full bg-white border border-gray-300 rounded-lg lg:rounded pl-8 pr-2 py-1.5 focus:outline-none focus:border-indigo-500 text-xs md:text-sm h-[32px] md:h-[38px]"
               />
             </div>
+            {/* Mobile Filter Button */}
+            <button
+               onClick={() => setShowMobileFilters(!showMobileFilters)}
+               className={`lg:hidden flex items-center justify-center rounded-lg shadow-sm h-[32px] w-[32px] flex-shrink-0 transition ${showMobileFilters ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+            >
+              <Filter size={14} />
+            </button>
             {/* Mobile Export Button */}
             <button
                onClick={handleDownloadCSV}
-               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center xl:hidden h-[38px] w-[38px] flex-shrink-0 shadow-sm transition"
+               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center lg:hidden h-[32px] w-[32px] flex-shrink-0 shadow-sm transition"
             >
-              <Download size={20} />
+              <Download size={16} />
             </button>
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-2 lg:flex gap-2 w-full xl:w-auto xl:flex-[2]">
+          <div className={`${showMobileFilters ? 'grid' : 'hidden'} lg:flex grid-cols-2 lg:flex-row gap-2 w-full lg:w-auto lg:flex-[4] items-center`}>
              <input
-               type="date"
+               type="text"
+               placeholder="From Date"
+               onFocus={(e) => (e.target.type = 'date')}
+               onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                value={filters.dateFrom}
                onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
-               className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+               className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
              />
              <input
-               type="date"
+               type="text"
+               placeholder="To Date"
+               onFocus={(e) => (e.target.type = 'date')}
+               onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
                value={filters.dateTo}
                onChange={(e) => setFilters({ ...filters, dateTo: e.target.value })}
-               className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+               className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
              />
              <div className="w-full">
                {user?.role === 'ADMIN' ? (
                  <select
                    value={filters.personName}
                    onChange={(e) => setFilters({ ...filters, personName: e.target.value })}
-                   className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+                   className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
                  >
                    <option value="">All Persons</option>
                    {users.map(u => (
@@ -169,7 +184,7 @@ export default function Ledger() {
                    ))}
                  </select>
                ) : (
-                 <div className="w-full border border-gray-200 bg-gray-50 rounded-lg xl:rounded px-3 py-2 md:py-1.5 text-sm text-gray-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis flex items-center justify-center">
+                 <div className="w-full border border-gray-200 bg-gray-50 rounded-lg lg:rounded px-2 py-1.5 text-[11px] md:text-sm text-gray-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis flex items-center justify-center h-[32px] md:h-[38px]">
                    {user?.name}
                  </div>
                )}
@@ -177,7 +192,7 @@ export default function Ledger() {
              <select
                value={filters.transactionType}
                onChange={(e) => setFilters({ ...filters, transactionType: e.target.value })}
-               className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+               className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
              >
                <option value="">All Types</option>
                <option value="CREDIT">Credit</option>
@@ -189,7 +204,7 @@ export default function Ledger() {
         {/* Desktop Export Button */}
         <button
            onClick={handleDownloadCSV}
-           className="hidden xl:flex bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 xl:h-[34px] rounded-lg font-semibold items-center justify-center gap-2 transition shadow-sm w-full xl:w-auto mt-2 xl:mt-0 flex-shrink-0"
+           className="hidden lg:flex bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 h-[38px] rounded-lg font-semibold items-center justify-center gap-2 transition shadow-sm w-full lg:w-auto flex-shrink-0"
         >
           <Download size={16} /> Export
         </button>
@@ -230,10 +245,10 @@ export default function Ledger() {
       </div>
 
       {/* Ledger List Container */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col mt-4">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col pt-1 mt-2">
         
         {/* Mobile View: Cards */}
-        <div className="md:hidden flex flex-col gap-2 p-2 overflow-y-auto h-[calc(100vh-380px)] min-h-[250px] bg-slate-50/50 pb-2">
+        <div className="md:hidden flex flex-col gap-2 p-2 overflow-y-auto h-[calc(100vh-210px)] min-h-[250px] bg-slate-50/50 pb-2">
           {paginatedLedger.map((entry) => (
             <div key={entry.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 relative flex flex-col gap-1.5 transition-all">
               <div className="flex justify-between items-center bg-gray-50 -mx-2.5 -mt-2.5 px-2.5 py-1.5 border-b border-gray-100 rounded-t-xl mb-0.5">

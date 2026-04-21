@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Upload, X, Eye, Check, XCircle, Plus, Search, ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { Upload, X, Eye, Check, XCircle, Plus, Search, ChevronLeft, ChevronRight, Calendar, Filter } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import {
   getExpenses,
@@ -23,6 +23,7 @@ import {
 } from '../utils/helpers';
 
 export default function Expenses() {
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const { user } = useAuthStore();
   const fileInputRef = useRef(null);
 
@@ -254,12 +255,15 @@ export default function Expenses() {
   };
 
   return (
-    <div className="p-2 md:p-6 space-y-4 md:space-y-6">
-      {/* Tabs Row */}
-      <div className="flex gap-2 mb-2 items-center border-b border-gray-100 pb-2">
+    <div className="p-2 md:p-6 space-y-2 md:space-y-6">
+      {/* Header Row: Tabs + Filters + Add Button */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 lg:gap-3 w-full pb-2 border-b border-gray-100">
+        
+        {/* Tabs Row */}
+        <div className="flex gap-2 w-full lg:w-auto flex-shrink-0 border-b lg:border-none border-gray-100 pb-2 lg:pb-0 mb-1 lg:mb-0">
           <button
             onClick={() => setActiveTab('pending')}
-            className={`py-1.5 px-3 font-bold transition text-sm rounded-md ${activeTab === 'pending'
+            className={`py-1.5 px-3 font-bold transition text-[11px] md:text-sm rounded-md whitespace-nowrap ${activeTab === 'pending'
               ? 'bg-indigo-50 text-indigo-700'
               : 'text-gray-500 hover:bg-gray-50'
               }`}
@@ -268,60 +272,70 @@ export default function Expenses() {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`py-1.5 px-3 font-bold transition text-sm rounded-md ${activeTab === 'history'
+            className={`py-1.5 px-3 font-bold transition text-[11px] md:text-sm rounded-md whitespace-nowrap ${activeTab === 'history'
               ? 'bg-indigo-50 text-indigo-700'
               : 'text-gray-500 hover:bg-gray-50'
               }`}
           >
             History ({approvedExpenses.length + rejectedExpenses.length})
           </button>
-      </div>
+        </div>
 
-      {/* Header with Filters */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-3 xl:gap-4 w-full">
-        <div className="flex flex-col xl:flex-row w-full gap-2">
+        {/* Filters and Search Container */}
+        <div className="flex flex-col lg:flex-row w-full gap-2 lg:gap-3 items-center flex-1">
           
-          {/* Search + Add Button Row (Mobile grouping) */}
-          <div className="flex items-end gap-2 w-full xl:w-auto xl:flex-1">
-            <div className="flex-1 w-full">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 xl:top-2 text-gray-400" size={14} />
-                <input
-                  type="text"
-                  placeholder="Search all fields..."
-                  value={filters.searchQuery}
-                  onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
-                  className="w-full bg-white border border-gray-300 rounded-lg xl:rounded pl-8 pr-3 py-2 xl:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
-                />
-              </div>
+          {/* Search + Add + Filter Button Row (Mobile grouping) */}
+          <div className="flex items-center gap-2 w-full lg:w-auto lg:flex-[1.5]">
+            <div className="flex-1 w-full relative">
+              <Search className="absolute left-2.5 top-[9px] lg:top-[11px] text-gray-400" size={14} />
+              <input
+                type="text"
+                placeholder="Search all fields..."
+                value={filters.searchQuery}
+                onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
+                className="w-full bg-white border border-gray-300 rounded-lg lg:rounded pl-8 pr-2 py-1.5 focus:outline-none focus:border-indigo-500 text-xs md:text-sm h-[32px] md:h-[38px]"
+              />
             </div>
+            {/* Mobile Filter Button */}
+            <button
+               onClick={() => setShowMobileFilters(!showMobileFilters)}
+               className={`lg:hidden flex items-center justify-center rounded-lg shadow-sm h-[32px] w-[32px] flex-shrink-0 transition ${showMobileFilters ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+            >
+              <Filter size={14} />
+            </button>
             {/* Mobile Add Button */}
             <button
                onClick={() => setShowFormModal(true)}
-               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center md:hidden h-[38px] w-[38px] flex-shrink-0 shadow-sm transition"
+               className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center lg:hidden h-[32px] w-[32px] flex-shrink-0 shadow-sm transition"
             >
-              <Plus size={20} />
+              <Plus size={16} />
             </button>
           </div>
 
           {/* Filters */}
-          <div className="grid grid-cols-2 md:flex gap-2 w-full xl:w-auto xl:flex-[2]">
+          <div className={`${showMobileFilters ? 'grid' : 'hidden'} lg:flex grid-cols-2 md:grid-cols-4 lg:flex-row gap-2 w-full lg:w-auto lg:flex-[4] items-center`}>
             <input
-              type="date"
+              type="text"
+              placeholder="From Date"
+              onFocus={(e) => (e.target.type = 'date')}
+              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
               value={filters.fromDate}
               onChange={(e) => setFilters({ ...filters, fromDate: e.target.value })}
-              className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
             />
             <input
-              type="date"
+              type="text"
+              placeholder="To Date"
+              onFocus={(e) => (e.target.type = 'date')}
+              onBlur={(e) => { if (!e.target.value) e.target.type = 'text'; }}
               value={filters.toDate}
               onChange={(e) => setFilters({ ...filters, toDate: e.target.value })}
-              className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
             />
             <select
               value={filters.personName}
               onChange={(e) => setFilters({ ...filters, personName: e.target.value })}
-              className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
             >
               <option value="">All Persons</option>
               {Array.from(new Set(expenses.map(e => e.personName))).map(person => (
@@ -331,7 +345,7 @@ export default function Expenses() {
             <select
               value={filters.mode}
               onChange={(e) => setFilters({ ...filters, mode: e.target.value })}
-              className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
             >
               <option value="">All Modes</option>
               <option value="Cash">Cash</option>
@@ -342,7 +356,7 @@ export default function Expenses() {
             <select
               value={filters.groupHead}
               onChange={(e) => setFilters({ ...filters, groupHead: e.target.value })}
-              className="w-full bg-white border border-gray-300 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm"
+              className="w-full bg-white border border-gray-300 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm h-[32px] md:h-[38px]"
             >
               <option value="">All Groups</option>
               <option value="IT">IT</option>
@@ -355,7 +369,7 @@ export default function Expenses() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full bg-white border border-indigo-200 text-indigo-700 rounded-lg xl:rounded px-2 py-2 md:py-1.5 focus:outline-none focus:border-indigo-500 text-sm font-medium"
+                className="w-full bg-white border border-indigo-200 text-indigo-700 rounded-lg lg:rounded px-2 py-1.5 focus:outline-none focus:border-indigo-500 text-[11px] md:text-sm font-medium h-[32px] md:h-[38px]"
               >
                 <option value="">All Statuses</option>
                 <option value="APPROVED">Approved</option>
@@ -368,7 +382,7 @@ export default function Expenses() {
         {/* Desktop Add Button */}
         <button
            onClick={() => setShowFormModal(true)}
-           className="hidden md:flex bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 xl:h-[34px] rounded-lg font-semibold items-center justify-center gap-2 transition shadow-sm w-full xl:w-auto mt-2 xl:mt-0 flex-shrink-0"
+           className="hidden lg:flex bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 h-[38px] rounded-lg font-semibold items-center justify-center gap-2 transition shadow-sm w-full lg:w-auto flex-shrink-0 whitespace-nowrap"
         >
           <Plus size={16} /> Add Expense
         </button>
@@ -574,11 +588,11 @@ export default function Expenses() {
 
 
       {/* List Section */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col mt-4">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col pt-1 mt-2">
 
         {/* Mobile View: Cards */}
         {/* Mobile View: Cards */}
-        <div className="md:hidden flex flex-col gap-2 p-2 overflow-y-auto h-[calc(100vh-380px)] min-h-[250px] bg-slate-50/50 pb-2">
+        <div className="md:hidden flex flex-col gap-2 p-2 overflow-y-auto h-[calc(100vh-210px)] min-h-[250px] bg-slate-50/50 pb-2">
           {paginatedExpenses.map((expense) => (
             <div key={expense.id} className="bg-white rounded-xl border border-indigo-50 shadow-[0_2px_10px_-4px_rgba(79,70,229,0.1)] p-2.5 relative flex flex-col gap-2 transition-all">
               {/* Top Row: Info */}
